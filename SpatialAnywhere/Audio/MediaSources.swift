@@ -26,34 +26,70 @@ struct MediaApp: Equatable, Hashable, Identifiable, Sendable {
 }
 
 enum MediaAppCatalog {
-    /// Common players that render audio with their own engines, so macOS does
-    /// not offer them Spatialize Stereo on its own.
+    /// Common Mac players that render audio with their own engines, so macOS
+    /// does not offer them Spatialize Stereo. Bundle IDs come from each app's
+    /// Info.plist as recorded in Homebrew cask uninstall data or app catalogs.
+    /// Chromium, Electron and Gecko apps share the audio path measured for
+    /// Chrome and Firefox; see the README for which apps were tested.
     static let presets: [MediaApp] = [
+        // Music streaming
         MediaApp("com.spotify.client", "Spotify", helpers: ["com.spotify.client.helper"]),
+        MediaApp("com.tidal.desktop", "TIDAL", helpers: ["com.tidal.desktop.helper"]),
+        MediaApp("com.amazon.music", "Amazon Music", helpers: ["com.amazon.music-renderer"]),
+        MediaApp("com.deezer.deezer-desktop", "Deezer"),
+        MediaApp("com.qobuz.QobuzDesktop", "Qobuz"),
+        MediaApp("com.pandora.desktop", "Pandora"),
+        MediaApp("com.netease.163music", "NetEase Cloud Music"),
+        MediaApp("com.tencent.QQMusicMac", "QQ Music"),
+        MediaApp("tv.plex.plexamp", "Plexamp"),
+        // Video and local-file players
+        MediaApp("org.videolan.vlc", "VLC"),
+        MediaApp("tv.plex.desktop", "Plex"),
+        MediaApp("tv.plex.htpc", "Plex HTPC"),
+        MediaApp("org.xbmc.kodi", "Kodi"),
+        MediaApp("com.Eltima.ElmediaPlayer", "Elmedia Player"),
+        MediaApp("com.movist.MovistPro", "Movist Pro"),
+        MediaApp("com.stremio.Stremio", "Stremio", helpers: ["com.smartcodeltd.stremio"]),
+        MediaApp("com.coppertino.Vox", "VOX", helpers: ["com.coppertino.Vox-Helper"]),
+        MediaApp("com.swinsian.Swinsian", "Swinsian"),
+        MediaApp("com.foobar2000.mac", "foobar2000"),
+        MediaApp("com.bilibili.bilibiliPC", "Bilibili"),
+        MediaApp("com.youku.mac", "Youku"),
+        // Browsers (web players such as YouTube, YouTube Music and Netflix)
         MediaApp("com.google.Chrome", "Google Chrome", helpers: ["com.google.Chrome.helper"]),
         MediaApp("com.microsoft.edgemac", "Microsoft Edge", helpers: ["com.microsoft.edgemac.helper"]),
         MediaApp("com.brave.Browser", "Brave", helpers: ["com.brave.Browser.helper"]),
         MediaApp("company.thebrowser.Browser", "Arc", helpers: ["company.thebrowser.browser.helper"]),
+        MediaApp("com.operasoftware.Opera", "Opera", helpers: ["com.operasoftware.Opera.helper"]),
+        MediaApp("com.vivaldi.Vivaldi", "Vivaldi", helpers: ["com.vivaldi.Vivaldi.helper"]),
         MediaApp("org.mozilla.firefox", "Firefox", helpers: ["org.mozilla.plugincontainer"]),
-        MediaApp("org.videolan.vlc", "VLC"),
-        MediaApp("com.netease.163music", "NetEase Cloud Music"),
-        MediaApp("com.tencent.QQMusicMac", "QQ Music"),
-        MediaApp("com.tidal.desktop", "TIDAL", helpers: ["com.tidal.desktop.helper"]),
-        MediaApp("com.amazon.music", "Amazon Music"),
+        MediaApp("app.zen-browser.zen", "Zen", helpers: ["org.mozilla.plugincontainer"]),
     ]
 
     static let defaultSelection: [String] = ["com.spotify.client"]
 
     /// Apps that already hand macOS spatializable audio. Relaying them would
     /// spatialize the signal a second time, so they are never offered.
+    /// Music, IINA and Petrichor were confirmed on a Mac: coreaudiod logs their
+    /// streams as `Is Spatializable = 1`. WebKit browsers play media through
+    /// Apple's WebKit, which already supports Spatial Audio.
     static let nativeSpatialBundleIdentifiers: Set<String> = [
         "com.apple.Music",
         "com.apple.TV",
         "com.apple.podcasts",
         "com.apple.QuickTimePlayerX",
         "com.apple.Safari",
+        "com.kagi.kagimacOS",
         "com.colliderli.iina",
         "com.firecore.infuse",
+        "org.Petrichor",
+    ]
+
+    /// Apps that play sound but are not media players, kept out of the list.
+    static let nonMediaBundleIdentifiers: Set<String> = [
+        "com.openai.chat",
+        "com.openai.codex",
+        "com.anthropic.claudefordesktop",
     ]
 
     static func preset(for bundleIdentifier: String) -> MediaApp? {
@@ -62,6 +98,13 @@ enum MediaAppCatalog {
 
     static func isNativeSpatial(_ bundleIdentifier: String) -> Bool {
         nativeSpatialBundleIdentifiers.contains(bundleIdentifier)
+    }
+
+    /// Whether an app may appear in the source list at all.
+    static func isOffered(_ bundleIdentifier: String) -> Bool {
+        !isNativeSpatial(bundleIdentifier) &&
+            !nonMediaBundleIdentifiers.contains(bundleIdentifier) &&
+            bundleIdentifier != Bundle.main.bundleIdentifier
     }
 }
 
@@ -172,7 +215,7 @@ struct SourceSelectionStore {
         guard let stored = defaults.array(forKey: Self.key) as? [String] else {
             return MediaAppCatalog.defaultSelection
         }
-        return stored.filter { !MediaAppCatalog.isNativeSpatial($0) }
+        return stored.filter(MediaAppCatalog.isOffered)
     }
 
     func save(_ bundleIdentifiers: [String]) {

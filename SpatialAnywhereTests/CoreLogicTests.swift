@@ -48,11 +48,26 @@ final class CoreLogicTests: XCTestCase {
         XCTAssertFalse(MediaAppMatcher.owns(chrome, processBundleIdentifier: "", owningAppBundleIdentifier: nil))
     }
 
-    func testNativeSpatialAppsAreNeverPresets() {
-        let presetIDs = Set(MediaAppCatalog.presets.map(\.bundleIdentifier))
-        XCTAssertTrue(presetIDs.isDisjoint(with: MediaAppCatalog.nativeSpatialBundleIdentifiers))
-        XCTAssertTrue(MediaAppCatalog.isNativeSpatial("com.colliderli.iina"))
-        XCTAssertFalse(MediaAppCatalog.isNativeSpatial("com.google.Chrome"))
+    func testPresetsAreUniqueAndOffered() {
+        let presetIDs = MediaAppCatalog.presets.map(\.bundleIdentifier)
+        XCTAssertEqual(Set(presetIDs).count, presetIDs.count, "duplicate preset bundle IDs")
+        XCTAssertTrue(presetIDs.allSatisfy(MediaAppCatalog.isOffered))
+        XCTAssertTrue(Set(presetIDs).isDisjoint(with: MediaAppCatalog.nativeSpatialBundleIdentifiers))
+    }
+
+    func testNativeSpatialAndNonMediaAppsAreNotOffered() {
+        for id in ["com.colliderli.iina", "org.Petrichor", "com.apple.Safari", "com.openai.chat", "com.anthropic.claudefordesktop"] {
+            XCTAssertFalse(MediaAppCatalog.isOffered(id), id)
+        }
+        XCTAssertFalse(MediaAppCatalog.isOffered(Bundle.main.bundleIdentifier ?? ""))
+        XCTAssertTrue(MediaAppCatalog.isOffered("org.videolan.vlc"))
+        XCTAssertTrue(MediaAppCatalog.isOffered("com.example.someplayer"))
+    }
+
+    func testAmazonMusicRendererCountsAsAmazonMusic() {
+        let amazon = MediaAppCatalog.preset(for: "com.amazon.music")!
+        // "-renderer" is not a dotted suffix, so only the declared helper makes it match.
+        XCTAssertTrue(MediaAppMatcher.owns(amazon, processBundleIdentifier: "com.amazon.music-renderer", owningAppBundleIdentifier: nil))
     }
 
     func testTapPlannerCollectsSelectedAppsAndObservedHelpers() {
@@ -83,12 +98,12 @@ final class CoreLogicTests: XCTestCase {
         XCTAssertTrue(active.needsRebuild(toCapture: newHelperBundle, followsBundleIdentifiers: true))
     }
 
-    func testSelectionStoreDefaultsToSpotifyAndDropsNativeSpatialApps() throws {
+    func testSelectionStoreDefaultsToSpotifyAndDropsAppsThatAreNotOffered() throws {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "SpatialAnywhereTests.\(UUID().uuidString)"))
         let store = SourceSelectionStore(defaults: defaults)
         XCTAssertEqual(store.load(), ["com.spotify.client"])
 
-        store.save(["org.mozilla.firefox", "com.google.Chrome", "com.google.Chrome", "com.apple.Music"])
+        store.save(["org.mozilla.firefox", "com.google.Chrome", "com.google.Chrome", "com.apple.Music", "com.openai.chat"])
         XCTAssertEqual(store.load(), ["com.google.Chrome", "org.mozilla.firefox"])
 
         store.save([])

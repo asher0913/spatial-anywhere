@@ -126,7 +126,7 @@ final class RelayViewModel: ObservableObject {
     }
 
     func setSource(_ app: MediaApp, selected: Bool) {
-        guard !MediaAppCatalog.isNativeSpatial(app.bundleIdentifier) else { return }
+        guard MediaAppCatalog.isOffered(app.bundleIdentifier) else { return }
         knownApps[app.bundleIdentifier] = app
         var ids = selectedBundleIdentifiers.filter { $0 != app.bundleIdentifier }
         if selected { ids.append(app.bundleIdentifier) }
@@ -405,7 +405,7 @@ final class RelayViewModel: ObservableObject {
         let playingOthers = appsWithAudio.filter(\.value.playing).map(\.key)
         let others = Set(playingOthers).union(selected)
             .subtracting(seen)
-            .filter { !MediaAppCatalog.isNativeSpatial($0) && $0 != Bundle.main.bundleIdentifier }
+            .filter(MediaAppCatalog.isOffered)
         var otherRows: [SourceRow] = []
         for id in others {
             let info = appsWithAudio[id]

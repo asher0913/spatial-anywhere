@@ -22,12 +22,30 @@ The relay captures the selected apps with a Core Audio process tap, mutes their 
 
 This project started from [Spatial Relay](https://github.com/shevlfs/spatial-relay), which relays Spotify only. Spatial Anywhere adds:
 
-- **Any app.** Choose any number of sources: presets for common players (Spotify, Chrome, Edge, Brave, Arc, Firefox, VLC, NetEase Cloud Music, QQ Music, TIDAL, Amazon Music) plus any other app that is playing right now. The selection is saved.
+- **Any app.** Choose any number of sources: 29 presets for common Mac players without built-in Spatial Audio (see [Supported apps](#supported-apps)) plus any other app that is playing right now. The selection is saved.
 - **Helper processes.** Browsers and Electron apps play audio from helpers (`com.google.Chrome.helper`, Firefox's `plugin-container`). Each Core Audio process is resolved to the outermost `.app` bundle that contains it, so helpers count as their app.
 - **Taps that follow apps.** On macOS 26 and later the tap follows bundle IDs with process restore, so a helper that starts later or an app that restarts is captured without user action. On earlier releases the tap is rebuilt when a selected app opens a new audio process. Changing the selection while relaying rebuilds the pipeline in about 0.15 s.
-- **No double spatialization.** Apps that already provide Spatial Audio (Music, TV, Podcasts, QuickTime Player, Safari, IINA, Infuse) are never offered.
+- **No double spatialization.** Apps that already provide Spatial Audio are never offered, nor are assistants such as ChatGPT and Claude that play sound but are not media players.
 - **Diagnostics.** Start, tap format, rebuilds and failures are logged under the `com.asher0913.SpatialAnywhere` subsystem, and an error stays visible after the panel is reopened.
 - **A measurement harness.** [`Tools/TapCompare`](Tools/TapCompare) records a source app and the relay at the same time and compares them sample by sample.
+
+## Supported apps
+
+| Group | Apps | Status |
+|---|---|---|
+| Tested on a Mac | Google Chrome, Firefox, Spotify | No Spatial Audio on their own; relayed and measured (below) |
+| Same engine as a tested app | Microsoft Edge, Brave, Arc, Opera, Vivaldi (Chromium); Zen (Gecko); TIDAL, Deezer, Plexamp (Electron) | Expected to behave like Chrome or Firefox; untested here |
+| Documented without Spatial Audio on Mac | VLC ([VLCKit issue](https://code.videolan.org/videolan/VLCKit/-/issues/514)), Plex and Plex HTPC ([Plex forum](https://forums.plex.tv/t/spatial-audio-on-mac-client/837074)) | Untested here |
+| No Spatial Audio found in their docs or store listings | Amazon Music, Qobuz, Pandora, NetEase Cloud Music, QQ Music, Bilibili, Youku, Kodi, Stremio, Elmedia Player, Movist Pro, VOX, Swinsian, foobar2000 | Untested here |
+| Excluded: Spatial Audio built in | Music, TV, Podcasts, QuickTime Player, Safari and Orion (WebKit), IINA, Infuse, Petrichor | — |
+
+Which apps already have Spatial Audio can be read from the system log: `coreaudiod` reports `Is Spatializable = 1` for their streams. On the test Mac that line appeared for Music, IINA and Petrichor and never for Spotify, Chrome or Firefox.
+
+```sh
+log show --last 1h --predicate 'process == "coreaudiod" AND eventMessage CONTAINS "Is Spatializable"'
+```
+
+Any other app that is playing also appears in the list and can be relayed.
 
 ## Measured results
 

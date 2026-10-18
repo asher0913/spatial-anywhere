@@ -82,7 +82,7 @@ struct ContentView: View {
                     .strokeBorder(Color.primary.opacity(0.08))
             }
 
-            Text("Music, TV, Safari and IINA already support Spatial Audio on their own, so they are not listed.")
+            Text("Apps with built-in Spatial Audio (Music, TV, Safari, IINA, Infuse, Petrichor) are not listed.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
