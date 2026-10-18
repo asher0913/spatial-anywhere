@@ -4,9 +4,10 @@ struct ContentView: View {
     @ObservedObject var viewModel: RelayViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: 18) {
             header
-            routeCard
+            sourcesCard
+            outputCard
 
             if let message = viewModel.message {
                 messageCard(message)
@@ -35,7 +36,7 @@ struct ContentView: View {
                 .frame(width: 56, height: 56)
                 .background(
                     LinearGradient(
-                        colors: [Color(red: 0.12, green: 0.78, blue: 0.43), Color(red: 0.07, green: 0.58, blue: 0.86)],
+                        colors: [Color(red: 1.0, green: 0.55, blue: 0.32), Color(red: 0.90, green: 0.26, blue: 0.56), Color(red: 0.40, green: 0.26, blue: 0.86)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
@@ -45,31 +46,90 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Spatial Anywhere")
                     .font(.title.bold())
-                Text("Make Spotify stereo eligible for AirPods Spatial Audio")
+                Text("AirPods Spatial Audio for Spotify, Chrome, Firefox and more")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
         }
     }
 
-    private var routeCard: some View {
-        VStack(spacing: 0) {
-            routeRow(
-                icon: "music.note",
-                title: "Spotify",
-                detail: viewModel.spotifyDetail,
-                state: viewModel.spotifyState
-            )
+    private var sourcesCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Relay these apps")
+                .font(.headline)
 
-            Divider().padding(.leading, 48)
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(Array(viewModel.sourceRows.enumerated()), id: \.element.id) { index, row in
+                        if index > 0 {
+                            Divider().padding(.leading, 44)
+                        }
+                        sourceRow(row)
+                    }
+                    if viewModel.sourceRows.isEmpty {
+                        Text("No supported players found. Start playback in an app, then click Refresh.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                    }
+                }
+                .padding(.horizontal, 14)
+            }
+            .frame(height: 236)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.08))
+            }
 
-            routeRow(
-                icon: "speaker.wave.2.fill",
-                title: "Output",
-                detail: viewModel.outputDetail,
-                state: viewModel.outputState
-            )
+            Text("Music, TV, Safari and IINA already support Spatial Audio on their own, so they are not listed.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
+    }
+
+    private func sourceRow(_ row: RelayViewModel.SourceRow) -> some View {
+        Toggle(isOn: Binding(
+            get: { row.isSelected },
+            set: { viewModel.setSource(row.app, selected: $0) }
+        )) {
+            HStack(spacing: 10) {
+                appIcon(path: row.appPath)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(row.app.name).font(.body)
+                    Text(row.status.label)
+                        .font(.caption)
+                        .foregroundStyle(row.status == .playing ? Color.green : Color.secondary)
+                }
+                Spacer()
+            }
+        }
+        .toggleStyle(.checkbox)
+        .disabled(viewModel.isBusy)
+        .frame(minHeight: 44)
+    }
+
+    @ViewBuilder
+    private func appIcon(path: String?) -> some View {
+        if let path {
+            Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+                .resizable()
+                .frame(width: 26, height: 26)
+        } else {
+            Image(systemName: "app.dashed")
+                .font(.system(size: 20))
+                .foregroundStyle(.secondary)
+                .frame(width: 26, height: 26)
+        }
+    }
+
+    private var outputCard: some View {
+        routeRow(
+            icon: "speaker.wave.2.fill",
+            title: "Output",
+            detail: viewModel.outputDetail,
+            state: viewModel.outputState
+        )
         .padding(.horizontal, 16)
         .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay {
@@ -119,8 +179,9 @@ struct ContentView: View {
     private var meter: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("Relaying Spotify", systemImage: "waveform")
+                Label(viewModel.relayingSummary, systemImage: "waveform")
                     .font(.headline)
+                    .lineLimit(1)
                 Spacer()
                 Text(viewModel.latencyLabel)
                     .font(.caption.monospacedDigit())
@@ -169,18 +230,11 @@ struct ContentView: View {
     private var controls: some View {
         HStack(spacing: 12) {
             Button {
-                viewModel.openSpotify()
-            } label: {
-                Label("Open Spotify", systemImage: "arrow.up.forward.app")
-            }
-            .disabled(viewModel.isBusy || viewModel.isRelaying)
-
-            Button {
                 viewModel.refresh()
             } label: {
                 Label("Refresh", systemImage: "arrow.clockwise")
             }
-            .disabled(viewModel.isBusy || viewModel.isRelaying)
+            .disabled(viewModel.isBusy)
 
             Menu {
                 Button("Quit Spatial Anywhere", systemImage: "power") {
@@ -211,6 +265,16 @@ struct ContentView: View {
             .tint(viewModel.isRelaying ? .red : .accentColor)
             .disabled(!viewModel.canToggleRelay)
             .keyboardShortcut(.return, modifiers: [])
+        }
+    }
+}
+
+private extension RelayViewModel.SourceRow.Status {
+    var label: String {
+        switch self {
+        case .playing: "Playing"
+        case .open: "Open"
+        case .notRunning: "Not running"
         }
     }
 }

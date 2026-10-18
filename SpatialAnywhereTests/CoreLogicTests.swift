@@ -4,48 +4,107 @@ import XCTest
 @testable import SpatialAnywhere
 
 final class CoreLogicTests: XCTestCase {
-    func testSpotifyProcessMatcherAcceptsMainAppAndHelpers() {
-        XCTAssertTrue(
-            SpotifyProcessMatcher.matches(
-                bundleIdentifier: "com.spotify.client",
-                applicationName: "Spotify"
-            )
+    private let spotify = MediaAppCatalog.preset(for: "com.spotify.client")!
+    private let chrome = MediaAppCatalog.preset(for: "com.google.Chrome")!
+    private let firefox = MediaAppCatalog.preset(for: "org.mozilla.firefox")!
+
+    func testOutermostApplicationResolvesHelpersToTheirApp() {
+        XCTAssertEqual(
+            AppBundlePath.outermostApplication(
+                containing: "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/141.0/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper"
+            ),
+            "/Applications/Google Chrome.app"
         )
-        XCTAssertTrue(
-            SpotifyProcessMatcher.matches(
-                bundleIdentifier: "com.spotify.client.helper",
-                applicationName: "Spotify Helper (Renderer)"
-            )
+        XCTAssertEqual(
+            AppBundlePath.outermostApplication(
+                containing: "/Applications/Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container"
+            ),
+            "/Applications/Firefox.app"
         )
+        XCTAssertEqual(
+            AppBundlePath.outermostApplication(containing: "/Users/me/Applications/Spotify.app"),
+            "/Users/me/Applications/Spotify.app"
+        )
+        XCTAssertNil(AppBundlePath.outermostApplication(containing: "/usr/sbin/coreaudiod"))
     }
 
-    func testSpotifyProcessMatcherRejectsUnrelatedAudioApps() {
-        XCTAssertFalse(
-            SpotifyProcessMatcher.matches(
-                bundleIdentifier: "com.apple.Safari",
-                applicationName: "Safari"
-            )
-        )
-        XCTAssertFalse(
-            SpotifyProcessMatcher.matches(
-                bundleIdentifier: "com.example.notspotify",
-                applicationName: "Not Spotify"
-            )
-        )
-        XCTAssertFalse(
-            SpotifyProcessMatcher.matches(
-                bundleIdentifier: "com.example.audio",
-                applicationName: "Spotify"
-            )
-        )
+    func testMatcherAcceptsAppsAndTheirHelpers() {
+        XCTAssertTrue(MediaAppMatcher.owns(spotify, processBundleIdentifier: "com.spotify.client", owningAppBundleIdentifier: nil))
+        XCTAssertTrue(MediaAppMatcher.owns(spotify, processBundleIdentifier: "com.spotify.client.helper.renderer", owningAppBundleIdentifier: nil))
+        XCTAssertTrue(MediaAppMatcher.owns(chrome, processBundleIdentifier: "com.google.Chrome.helper", owningAppBundleIdentifier: nil))
+        // Firefox's audio runs in plugin-container, whose bundle ID shares no prefix with Firefox.
+        XCTAssertTrue(MediaAppMatcher.owns(firefox, processBundleIdentifier: "org.mozilla.plugincontainer", owningAppBundleIdentifier: nil))
     }
 
-    func testSpotifyProcessMatcherUsesNameOnlyWhenBundleIdentifierIsUnavailable() {
-        XCTAssertTrue(
-            SpotifyProcessMatcher.matches(
-                bundleIdentifier: "",
-                applicationName: "Spotify Helper (Renderer)"
-            )
+    func testMatcherPrefersTheResolvedOwningApp() {
+        XCTAssertTrue(MediaAppMatcher.owns(firefox, processBundleIdentifier: "org.example.unrelated", owningAppBundleIdentifier: "org.mozilla.firefox"))
+        // A process inside another app is not claimed just because its bundle ID looks similar.
+        XCTAssertFalse(MediaAppMatcher.owns(chrome, processBundleIdentifier: "com.google.Chrome.helper", owningAppBundleIdentifier: "com.google.Chrome.canary"))
+    }
+
+    func testMatcherRejectsUnrelatedApps() {
+        XCTAssertFalse(MediaAppMatcher.owns(spotify, processBundleIdentifier: "com.example.notspotify", owningAppBundleIdentifier: nil))
+        XCTAssertFalse(MediaAppMatcher.owns(spotify, processBundleIdentifier: "com.spotify.clientx", owningAppBundleIdentifier: nil))
+        XCTAssertFalse(MediaAppMatcher.owns(chrome, processBundleIdentifier: "", owningAppBundleIdentifier: nil))
+    }
+
+    func testNativeSpatialAppsAreNeverPresets() {
+        let presetIDs = Set(MediaAppCatalog.presets.map(\.bundleIdentifier))
+        XCTAssertTrue(presetIDs.isDisjoint(with: MediaAppCatalog.nativeSpatialBundleIdentifiers))
+        XCTAssertTrue(MediaAppCatalog.isNativeSpatial("com.colliderli.iina"))
+        XCTAssertFalse(MediaAppCatalog.isNativeSpatial("com.google.Chrome"))
+    }
+
+    func testTapPlannerCollectsSelectedAppsAndObservedHelpers() {
+        let processes = [
+            process(10, "com.google.Chrome", owner: "com.google.Chrome"),
+            process(11, "com.google.Chrome.helper.audio", owner: "com.google.Chrome"),
+            process(12, "com.spotify.client", owner: "com.spotify.client"),
+            process(13, "org.mozilla.plugincontainer", owner: "org.mozilla.firefox"),
+        ]
+        let target = TapPlanner.target(for: [chrome, firefox], processes: processes)
+        XCTAssertEqual(target.processObjectIDs, [10, 11, 13])
+        XCTAssertTrue(target.bundleIdentifiers.contains("com.google.Chrome.helper.audio"))
+        XCTAssertTrue(target.bundleIdentifiers.contains("org.mozilla.plugincontainer"))
+        XCTAssertFalse(target.bundleIdentifiers.contains("com.spotify.client"))
+    }
+
+    func testTapTargetRebuildsOnlyForNewlyCapturedAudio() {
+        let active = TapTarget(bundleIdentifiers: ["com.google.Chrome", "com.google.Chrome.helper"], processObjectIDs: [10, 11])
+        let helperExited = TapTarget(bundleIdentifiers: ["com.google.Chrome"], processObjectIDs: [10])
+        let newProcessSameBundle = TapTarget(bundleIdentifiers: ["com.google.Chrome", "com.google.Chrome.helper"], processObjectIDs: [10, 11, 12])
+        let newHelperBundle = TapTarget(bundleIdentifiers: ["com.google.Chrome", "com.google.Chrome.helper", "com.google.Chrome.helper.audio"], processObjectIDs: [10, 11])
+
+        XCTAssertFalse(active.needsRebuild(toCapture: helperExited, followsBundleIdentifiers: true))
+        XCTAssertFalse(active.needsRebuild(toCapture: helperExited, followsBundleIdentifiers: false))
+        // A bundle-ID tap picks up new processes of a known bundle by itself.
+        XCTAssertFalse(active.needsRebuild(toCapture: newProcessSameBundle, followsBundleIdentifiers: true))
+        XCTAssertTrue(active.needsRebuild(toCapture: newProcessSameBundle, followsBundleIdentifiers: false))
+        XCTAssertTrue(active.needsRebuild(toCapture: newHelperBundle, followsBundleIdentifiers: true))
+    }
+
+    func testSelectionStoreDefaultsToSpotifyAndDropsNativeSpatialApps() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "SpatialAnywhereTests.\(UUID().uuidString)"))
+        let store = SourceSelectionStore(defaults: defaults)
+        XCTAssertEqual(store.load(), ["com.spotify.client"])
+
+        store.save(["org.mozilla.firefox", "com.google.Chrome", "com.google.Chrome", "com.apple.Music"])
+        XCTAssertEqual(store.load(), ["com.google.Chrome", "org.mozilla.firefox"])
+
+        store.save([])
+        XCTAssertEqual(store.load(), [])
+    }
+
+    private func process(_ id: AudioObjectID, _ bundleID: String, owner: String?) -> AudioProcessInfo {
+        AudioProcessInfo(
+            id: id,
+            pid: pid_t(id),
+            bundleIdentifier: bundleID,
+            owningAppBundleIdentifier: owner,
+            owningAppName: nil,
+            owningAppPath: nil,
+            owningAppIsRegular: true,
+            isRunningOutput: false
         )
     }
 

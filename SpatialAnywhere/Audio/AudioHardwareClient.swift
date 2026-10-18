@@ -5,8 +5,14 @@ import Foundation
 struct AudioProcessInfo: Equatable, Identifiable, Sendable {
     let id: AudioObjectID
     let pid: pid_t
+    /// Bundle ID Core Audio reports for this process (a helper's own ID for helpers).
     let bundleIdentifier: String
-    let applicationName: String
+    /// The app the process belongs to: the outermost `.app` bundle around its executable.
+    let owningAppBundleIdentifier: String?
+    let owningAppName: String?
+    let owningAppPath: String?
+    /// The owning app shows in the Dock, i.e. it is something a person plays media in.
+    let owningAppIsRegular: Bool
     let isRunningOutput: Bool
 }
 
@@ -24,26 +30,18 @@ struct OutputDeviceInfo: Equatable, Sendable {
     }
 }
 
-enum SpotifyProcessMatcher {
-    static func matches(bundleIdentifier: String, applicationName: String) -> Bool {
-        let bundle = bundleIdentifier
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        if !bundle.isEmpty {
-            return bundle == "com.spotify.client" || bundle.hasPrefix("com.spotify.client.")
-        }
-
-        // Older Core Audio process objects may not expose a bundle identifier.
-        // Only then fall back to the application name.
-        let name = applicationName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return name == "spotify" || name.hasPrefix("spotify helper")
-    }
-}
-
 final class AudioHardwareClient {
     private let systemObject = AudioObjectID(kAudioObjectSystemObject)
 
-    func spotifyProcesses() throws -> [AudioProcessInfo] {
+    /// macOS 26 taps can follow bundle identifiers, which also captures helper
+    /// processes that start after the tap was created.
+    static var tapsFollowBundleIdentifiers: Bool {
+        if #available(macOS 26.0, *) { return true }
+        return false
+    }
+
+    /// Every process Core Audio knows about, except this app itself.
+    func audioProcesses() throws -> [AudioProcessInfo] {
         var address = propertyAddress(kAudioHardwarePropertyProcessObjectList)
         var byteCount: UInt32 = 0
         try CoreAudioFailure.check(
@@ -59,36 +57,51 @@ final class AudioHardwareClient {
         }
         try CoreAudioFailure.check(listStatus, operation: "Reading the audio process list")
 
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        let runningApps = NSWorkspace.shared.runningApplications
+        var appsByPath: [String: NSRunningApplication] = [:]
+        for app in runningApps {
+            if let path = app.bundleURL?.standardizedFileURL.path { appsByPath[path] = app }
+        }
+
         return objectIDs.compactMap { objectID in
             guard objectID != kAudioObjectUnknown else { return nil }
 
             let pid = (try? readPID(objectID)) ?? 0
-            let coreAudioBundleID = (try? readString(objectID, selector: kAudioProcessPropertyBundleID)) ?? ""
-            let application = NSRunningApplication(processIdentifier: pid)
-            let bundleID = coreAudioBundleID.isEmpty ? (application?.bundleIdentifier ?? "") : coreAudioBundleID
-            let applicationName = application?.localizedName ?? ""
+            guard pid != ownPID else { return nil }
 
-            guard SpotifyProcessMatcher.matches(
-                bundleIdentifier: bundleID,
-                applicationName: applicationName
-            ) else {
-                return nil
+            let application = NSRunningApplication(processIdentifier: pid)
+            let coreAudioBundleID = (try? readString(objectID, selector: kAudioProcessPropertyBundleID)) ?? ""
+            let bundleID = coreAudioBundleID.isEmpty ? (application?.bundleIdentifier ?? "") : coreAudioBundleID
+
+            let executablePath = application?.bundleURL?.standardizedFileURL.path ?? Self.executablePath(of: pid)
+            let ownerPath = executablePath.flatMap(AppBundlePath.outermostApplication(containing:))
+            let owner = ownerPath.flatMap { appsByPath[$0] }
+            let ownerBundleID = owner?.bundleIdentifier ?? ownerPath.flatMap { Bundle(path: $0)?.bundleIdentifier }
+            let ownerName = owner?.localizedName ?? ownerPath.map {
+                FileManager.default.displayName(atPath: $0).replacingOccurrences(of: ".app", with: "")
             }
 
             return AudioProcessInfo(
                 id: objectID,
                 pid: pid,
                 bundleIdentifier: bundleID,
-                applicationName: applicationName.isEmpty ? "Spotify" : applicationName,
+                owningAppBundleIdentifier: ownerBundleID,
+                owningAppName: ownerName,
+                owningAppPath: ownerPath,
+                owningAppIsRegular: owner?.activationPolicy == .regular,
                 isRunningOutput: (try? readBool(objectID, selector: kAudioProcessPropertyIsRunningOutput)) ?? false
             )
         }
-        .sorted {
-            if $0.isRunningOutput != $1.isRunningOutput {
-                return $0.isRunningOutput && !$1.isRunningOutput
-            }
-            return $0.pid < $1.pid
-        }
+        .sorted { $0.pid < $1.pid }
+    }
+
+    private static func executablePath(of pid: pid_t) -> String? {
+        guard pid > 0 else { return nil }
+        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
+        let length = proc_pidpath(pid, &buffer, UInt32(buffer.count))
+        guard length > 0 else { return nil }
+        return String(cString: buffer)
     }
 
     func defaultOutputDevice() throws -> OutputDeviceInfo {
@@ -112,10 +125,16 @@ final class AudioHardwareClient {
         )
     }
 
-    func createSpotifyTap(processes: [AudioProcessInfo], outputDevice: OutputDeviceInfo) throws -> AudioObjectID {
+    func createTap(target: TapTarget, outputDevice: OutputDeviceInfo) throws -> AudioObjectID {
         let description = CATapDescription()
-        description.name = "Spatial Anywhere — Spotify"
-        description.processes = processes.map(\.id)
+        description.name = "Spatial Anywhere"
+        if #available(macOS 26.0, *) {
+            description.bundleIDs = target.bundleIdentifiers
+            description.processes = []
+            description.isProcessRestoreEnabled = true
+        } else {
+            description.processes = target.processObjectIDs
+        }
         description.isPrivate = true
         description.isExclusive = false
         description.isMixdown = true
@@ -127,7 +146,7 @@ final class AudioHardwareClient {
         var tapID = AudioObjectID(kAudioObjectUnknown)
         try CoreAudioFailure.check(
             AudioHardwareCreateProcessTap(description, &tapID),
-            operation: "Creating the Spotify process tap"
+            operation: "Creating the process tap"
         )
         return tapID
     }

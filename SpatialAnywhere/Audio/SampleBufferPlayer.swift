@@ -1,6 +1,7 @@
 import AVFoundation
 import CoreMedia
 import Foundation
+import OSLog
 
 enum OutputReconfigurationGrace {
     static let durationMilliseconds: UInt64 = 5_000
@@ -179,7 +180,7 @@ final class SampleBufferPlayer: @unchecked Sendable {
         if renderer.status == .failed {
             // AVQueuedSampleBufferRenderingStatus.failed is terminal. Normal
             // spatial-output changes are handled by the notifications below;
-            // retaining Spotify's muted tap for five seconds cannot recover a
+            // retaining the muted tap for five seconds cannot recover a
             // renderer that has actually entered this state.
             deliverFailure(RelayError.rendererFailed(renderer.error?.localizedDescription ?? "unknown renderer error"))
             return
@@ -229,7 +230,7 @@ final class SampleBufferPlayer: @unchecked Sendable {
             rendererRecoveryIsActive = false
         }
 
-        // If the control queue was delayed while Spotify was silent, the
+        // If the control queue was delayed while the source was silent, the
         // synchronizer may already be beyond the last queued frame when audio
         // resumes. Rebase before enqueueing so new PCM is never timestamped in
         // the past.
@@ -288,7 +289,7 @@ final class SampleBufferPlayer: @unchecked Sendable {
 
         // The ring is normally empty while the renderer stays prebuffered. When
         // its playhead actually reaches the final queued sample, freeze there;
-        // this handles even very short Spotify pauses without creating late PTS.
+        // this handles even very short playback pauses without creating late PTS.
         if timelineIsRunning, capture.availableFrameCount == 0 {
             let playhead = synchronizer.currentTime()
             let queuedEnd = mediaTime(forFrame: nextFrame)
@@ -387,6 +388,8 @@ final class SampleBufferPlayer: @unchecked Sendable {
     private func deliverFailure(_ error: Error) {
         guard !failureWasDelivered else { return }
         failureWasDelivered = true
+        Logger(subsystem: "com.asher0913.SpatialAnywhere", category: "player")
+            .error("Player stopped: \(error.localizedDescription, privacy: .public)")
         // Do not wait for the main actor to tear down the UI. Stopping the IOProc
         // here immediately releases mutedWhenTapped during renderer failures.
         try? capture.stop()

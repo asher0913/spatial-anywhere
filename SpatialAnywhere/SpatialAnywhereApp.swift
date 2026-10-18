@@ -34,7 +34,7 @@ struct SpatialAnywhereApp: App {
     var body: some Scene {
         MenuBarExtra {
             ContentView(viewModel: viewModel)
-                .frame(width: 500, height: 540)
+                .frame(width: 500, height: 700)
         } label: {
             Image(systemName: viewModel.menuBarSymbolName)
                 .symbolRenderingMode(.monochrome)

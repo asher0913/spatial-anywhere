@@ -25,7 +25,7 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSAudioCaptureUsageDescription</key>
-	<string>Spatial Anywhere captures Spotify's outgoing audio only while relaying it for AirPods Spatial Audio. Audio is never saved.</string>
+	<string>Spatial Anywhere captures the outgoing audio of the apps you choose, only while relaying it for AirPods Spatial Audio. Audio is never saved.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSPrincipalClass</key>
