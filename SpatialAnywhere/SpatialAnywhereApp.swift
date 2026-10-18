@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @MainActor
-private final class SpatialRelayApplicationDelegate: NSObject, NSApplicationDelegate {
+private final class SpatialAnywhereApplicationDelegate: NSObject, NSApplicationDelegate {
     weak var viewModel: RelayViewModel?
     private var terminationReplyIsPending = false
 
@@ -21,8 +21,8 @@ private final class SpatialRelayApplicationDelegate: NSObject, NSApplicationDele
 }
 
 @main
-struct SpatialRelayApp: App {
-    @NSApplicationDelegateAdaptor(SpatialRelayApplicationDelegate.self) private var appDelegate
+struct SpatialAnywhereApp: App {
+    @NSApplicationDelegateAdaptor(SpatialAnywhereApplicationDelegate.self) private var appDelegate
     @StateObject private var viewModel: RelayViewModel
 
     init() {

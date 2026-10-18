@@ -14,7 +14,7 @@ struct RelayMetrics: Sendable {
 
 final class AudioRelayCoordinator: @unchecked Sendable {
     private let hardware = AudioHardwareClient()
-    private let controlQueue = DispatchQueue(label: "com.shevlfs.SpatialRelay.audio-coordinator")
+    private let controlQueue = DispatchQueue(label: "com.asher0913.SpatialAnywhere.audio-coordinator")
     private let controlQueueKey = DispatchSpecificKey<UInt8>()
 
     private var tapID = AudioObjectID(kAudioObjectUnknown)

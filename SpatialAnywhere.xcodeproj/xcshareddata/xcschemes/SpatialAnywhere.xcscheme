@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000010"
-               BuildableName = "SpatialRelay.app"
-               BlueprintName = "SpatialRelay"
-               ReferencedContainer = "container:SpatialRelay.xcodeproj">
+               BuildableName = "SpatialAnywhere.app"
+               BlueprintName = "SpatialAnywhere"
+               ReferencedContainer = "container:SpatialAnywhere.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -30,9 +30,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000011"
-               BuildableName = "SpatialRelayTests.xctest"
-               BlueprintName = "SpatialRelayTests"
-               ReferencedContainer = "container:SpatialRelay.xcodeproj">
+               BuildableName = "SpatialAnywhereTests.xctest"
+               BlueprintName = "SpatialAnywhereTests"
+               ReferencedContainer = "container:SpatialAnywhere.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -50,9 +50,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000011"
-               BuildableName = "SpatialRelayTests.xctest"
-               BlueprintName = "SpatialRelayTests"
-               ReferencedContainer = "container:SpatialRelay.xcodeproj">
+               BuildableName = "SpatialAnywhereTests.xctest"
+               BlueprintName = "SpatialAnywhereTests"
+               ReferencedContainer = "container:SpatialAnywhere.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A00000000000000000000010"
-            BuildableName = "SpatialRelay.app"
-            BlueprintName = "SpatialRelay"
-            ReferencedContainer = "container:SpatialRelay.xcodeproj">
+            BuildableName = "SpatialAnywhere.app"
+            BlueprintName = "SpatialAnywhere"
+            ReferencedContainer = "container:SpatialAnywhere.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -89,9 +89,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A00000000000000000000010"
-            BuildableName = "SpatialRelay.app"
-            BlueprintName = "SpatialRelay"
-            ReferencedContainer = "container:SpatialRelay.xcodeproj">
+            BuildableName = "SpatialAnywhere.app"
+            BlueprintName = "SpatialAnywhere"
+            ReferencedContainer = "container:SpatialAnywhere.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

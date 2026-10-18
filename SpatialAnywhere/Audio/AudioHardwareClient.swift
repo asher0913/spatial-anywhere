@@ -114,7 +114,7 @@ final class AudioHardwareClient {
 
     func createSpotifyTap(processes: [AudioProcessInfo], outputDevice: OutputDeviceInfo) throws -> AudioObjectID {
         let description = CATapDescription()
-        description.name = "Spatial Relay — Spotify"
+        description.name = "Spatial Anywhere — Spotify"
         description.processes = processes.map(\.id)
         description.isPrivate = true
         description.isExclusive = false
@@ -148,13 +148,13 @@ final class AudioHardwareClient {
     }
 
     func createAggregateDevice(tapUID: String) throws -> AudioObjectID {
-        let aggregateUID = "com.shevlfs.SpatialRelay.aggregate.\(UUID().uuidString)"
+        let aggregateUID = "com.asher0913.SpatialAnywhere.aggregate.\(UUID().uuidString)"
         let tapEntry: [String: Any] = [
             kAudioSubTapUIDKey: tapUID,
             kAudioSubTapDriftCompensationKey: true
         ]
         let description: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "Spatial Relay Capture",
+            kAudioAggregateDeviceNameKey: "Spatial Anywhere Capture",
             kAudioAggregateDeviceUIDKey: aggregateUID,
             kAudioAggregateDeviceIsPrivateKey: true,
             kAudioAggregateDeviceTapListKey: [tapEntry]

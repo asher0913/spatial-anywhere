@@ -47,7 +47,7 @@ final class SampleBufferPlayer: @unchecked Sendable {
     private let capture: SRAudioCaptureBridge
     private let renderer = AVSampleBufferAudioRenderer()
     private let synchronizer = AVSampleBufferRenderSynchronizer()
-    private let serializationQueue = DispatchQueue(label: "com.shevlfs.SpatialRelay.sample-buffer-player")
+    private let serializationQueue = DispatchQueue(label: "com.asher0913.SpatialAnywhere.sample-buffer-player")
     private let queueKey = DispatchSpecificKey<UInt8>()
     private let factory: PCMSampleBufferFactory
     private let sampleRate: Double

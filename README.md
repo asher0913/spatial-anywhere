@@ -1,9 +1,9 @@
-# Spatial Relay
+# Spatial Anywhere
 
 [![CI](https://github.com/shevlfs/spatial-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/shevlfs/spatial-relay/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Spatial Relay is a macOS menu-bar app that routes audio from Spotify Desktop through an Apple playback API that supports Spatialize Stereo. It is intended for AirPods models with Spatial Audio support.
+Spatial Anywhere is a macOS menu-bar app that routes audio from Spotify Desktop through an Apple playback API that supports Spatialize Stereo. It is intended for AirPods models with Spatial Audio support.
 
 ```text
 Spotify -> Core Audio process tap -> stereo Float32 PCM ring buffer
@@ -27,8 +27,8 @@ Prebuilt Apple silicon packages are available on the [Releases page](https://git
 To build locally:
 
 1. Clone the repository.
-2. Open `SpatialRelay.xcodeproj` in Xcode.
-3. Select the **SpatialRelay** scheme and your Mac.
+2. Open `SpatialAnywhere.xcodeproj` in Xcode.
+3. Select the **SpatialAnywhere** scheme and your Mac.
 4. Choose a Development Team if Xcode requests one.
 5. Run the app.
 
@@ -36,12 +36,12 @@ To build locally:
 
 1. Connect your AirPods and select them as the Mac's output.
 2. Start playback in Spotify.
-3. Open Spatial Relay from its waveform icon in the menu bar.
+3. Open Spatial Anywhere from its waveform icon in the menu bar.
 4. Click **Start relay**.
 5. Approve **System Audio Recording** access when macOS asks.
 6. Open the macOS Sound or AirPods menu and select **Fixed** or **Head Tracked** under Spatial Audio.
 
-Stop the relay before intentionally changing output devices. Use **Quit Spatial Relay** from the ellipsis menu to close the app and restore Spotify's direct output.
+Stop the relay before intentionally changing output devices. Use **Quit Spatial Anywhere** from the ellipsis menu to close the app and restore Spotify's direct output.
 
 ## Audio and privacy
 
@@ -49,7 +49,7 @@ The relay accepts stereo, native-endian 32-bit floating-point PCM from Core Audi
 
 Audio remains in a bounded in-memory buffer. It is not written to disk, sent over the network, or collected as telemetry. Spotify's original output is muted only while the process tap is active. Normal stop, quit, and failure paths restore direct output.
 
-Spatial Audio mode changes can briefly reconfigure the renderer. Spatial Relay gives those changes a five-second recovery window, flushes and rebases the render timeline, and stops safely if the output does not recover.
+Spatial Audio mode changes can briefly reconfigure the renderer. Spatial Anywhere gives those changes a five-second recovery window, flushes and rebases the render timeline, and stops safely if the output does not recover.
 
 ## Development
 
@@ -57,8 +57,8 @@ Run the unit tests from the command line:
 
 ```sh
 xcodebuild \
-  -project SpatialRelay.xcodeproj \
-  -scheme SpatialRelay \
+  -project SpatialAnywhere.xcodeproj \
+  -scheme SpatialAnywhere \
   -configuration Debug \
   -destination 'platform=macOS,arch=arm64' \
   CODE_SIGNING_ALLOWED=NO \
@@ -73,6 +73,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Security r
 
 ## License
 
-Spatial Relay is open source under the [MIT License](LICENSE).
+Spatial Anywhere is open source under the [MIT License](LICENSE).
 
 Spotify, AirPods, Spatial Audio, macOS, and Apple are trademarks of their respective owners. This project is independent and is not affiliated with, endorsed by, or sponsored by Spotify or Apple.

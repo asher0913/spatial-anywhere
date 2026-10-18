@@ -36,12 +36,12 @@ jobs:
       - name: Run unit tests
         run: |
           xcodebuild -quiet \
-            -project SpatialRelay.xcodeproj \
-            -scheme SpatialRelay \
+            -project SpatialAnywhere.xcodeproj \
+            -scheme SpatialAnywhere \
             -configuration Debug \
             -destination 'platform=macOS,arch=arm64' \
-            -derivedDataPath "$RUNNER_TEMP/SpatialRelayDerivedData" \
-            -resultBundlePath "$RUNNER_TEMP/SpatialRelayTests.xcresult" \
+            -derivedDataPath "$RUNNER_TEMP/SpatialAnywhereDerivedData" \
+            -resultBundlePath "$RUNNER_TEMP/SpatialAnywhereTests.xcresult" \
             ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO \
             test
@@ -49,11 +49,11 @@ jobs:
       - name: Run static analysis
         run: |
           xcodebuild -quiet \
-            -project SpatialRelay.xcodeproj \
-            -scheme SpatialRelay \
+            -project SpatialAnywhere.xcodeproj \
+            -scheme SpatialAnywhere \
             -configuration Debug \
             -destination 'platform=macOS,arch=arm64' \
-            -derivedDataPath "$RUNNER_TEMP/SpatialRelayDerivedData" \
+            -derivedDataPath "$RUNNER_TEMP/SpatialAnywhereDerivedData" \
             ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO \
             analyze
@@ -61,25 +61,25 @@ jobs:
       - name: Build Release configuration
         run: |
           xcodebuild -quiet \
-            -project SpatialRelay.xcodeproj \
-            -scheme SpatialRelay \
+            -project SpatialAnywhere.xcodeproj \
+            -scheme SpatialAnywhere \
             -configuration Release \
             -destination 'platform=macOS,arch=arm64' \
-            -derivedDataPath "$RUNNER_TEMP/SpatialRelayDerivedData" \
+            -derivedDataPath "$RUNNER_TEMP/SpatialAnywhereDerivedData" \
             ARCHS=arm64 \
             ONLY_ACTIVE_ARCH=NO \
             CODE_SIGNING_ALLOWED=NO \
             build
 
           lipo \
-            "$RUNNER_TEMP/SpatialRelayDerivedData/Build/Products/Release/SpatialRelay.app/Contents/MacOS/SpatialRelay" \
+            "$RUNNER_TEMP/SpatialAnywhereDerivedData/Build/Products/Release/SpatialAnywhere.app/Contents/MacOS/SpatialAnywhere" \
             -verify_arch arm64
 
       - name: Upload failed test result
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: SpatialRelayTests-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/SpatialRelayTests.xcresult
+          name: SpatialAnywhereTests-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/SpatialAnywhereTests.xcresult
           if-no-files-found: ignore
           retention-days: 7

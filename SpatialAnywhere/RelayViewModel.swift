@@ -33,7 +33,7 @@ final class RelayViewModel: ObservableObject {
 
     private let coordinator = AudioRelayCoordinator()
     private let startupQueue = DispatchQueue(
-        label: "com.shevlfs.SpatialRelay.startup",
+        label: "com.asher0913.SpatialAnywhere.startup",
         qos: .userInitiated
     )
     private var discovery: RelayDiscovery?
@@ -66,10 +66,10 @@ final class RelayViewModel: ObservableObject {
     }
 
     var menuBarStatusText: String {
-        if isBusy { return "Spatial Relay is changing audio state" }
-        if isRelaying { return "Spatial Relay is active" }
-        if message?.kind == .error { return "Spatial Relay needs attention" }
-        return "Spatial Relay is stopped"
+        if isBusy { return "Spatial Anywhere is changing audio state" }
+        if isRelaying { return "Spatial Anywhere is active" }
+        if message?.kind == .error { return "Spatial Anywhere needs attention" }
+        return "Spatial Anywhere is stopped"
     }
 
     func refresh() {
@@ -214,7 +214,7 @@ final class RelayViewModel: ObservableObject {
             } else {
                 message = Message(
                     kind: .info,
-                    text: "Relay active. Spatial Audio is now controlled for Spatial Relay in the macOS Sound menu."
+                    text: "Relay active. Spatial Audio is now controlled for Spatial Anywhere in the macOS Sound menu."
                 )
             }
             startMetering()
@@ -339,7 +339,7 @@ final class RelayViewModel: ObservableObject {
             description.localizedCaseInsensitiveContains("'perm'") ||
             description.contains("560492391") ||
             description.localizedCaseInsensitiveContains("!hog") {
-            return "\(description) Allow Spatial Relay in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch it."
+            return "\(description) Allow Spatial Anywhere in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch it."
         }
         return description
     }

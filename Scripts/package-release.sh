@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PROJECT="$ROOT/SpatialRelay.xcodeproj"
-SCHEME="SpatialRelay"
+PROJECT="$ROOT/SpatialAnywhere.xcodeproj"
+SCHEME="SpatialAnywhere"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-$ROOT/build/DerivedData}"
 OUTPUT_DIR="${OUTPUT_DIR:-$ROOT/build}"
 
@@ -30,7 +30,7 @@ if [[ "$VERSION" != "$PROJECT_VERSION" ]]; then
 fi
 
 mkdir -p "$OUTPUT_DIR"
-STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/SpatialRelayRelease.XXXXXX")"
+STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/SpatialAnywhereRelease.XXXXXX")"
 trap 'rm -rf "$STAGING_DIR"' EXIT
 
 xcodebuild -quiet \
@@ -47,10 +47,10 @@ xcodebuild -quiet \
   DEVELOPMENT_TEAM= \
   build
 
-SOURCE_APP="$DERIVED_DATA_PATH/Build/Products/Release/SpatialRelay.app"
-PACKAGED_APP="$STAGING_DIR/Spatial Relay.app"
-EXECUTABLE="$SOURCE_APP/Contents/MacOS/SpatialRelay"
-ARCHIVE="$OUTPUT_DIR/SpatialRelay-$VERSION-arm64.zip"
+SOURCE_APP="$DERIVED_DATA_PATH/Build/Products/Release/SpatialAnywhere.app"
+PACKAGED_APP="$STAGING_DIR/Spatial Anywhere.app"
+EXECUTABLE="$SOURCE_APP/Contents/MacOS/SpatialAnywhere"
+ARCHIVE="$OUTPUT_DIR/SpatialAnywhere-$VERSION-arm64.zip"
 CHECKSUM="$ARCHIVE.sha256"
 
 test -d "$SOURCE_APP"
@@ -69,7 +69,7 @@ ditto "$ROOT/LICENSE" "$STAGING_DIR/LICENSE"
 rm -f "$ARCHIVE" "$CHECKSUM"
 (
   cd "$STAGING_DIR"
-  COPYFILE_DISABLE=1 /usr/bin/zip -qry "$ARCHIVE" "Spatial Relay.app" LICENSE
+  COPYFILE_DISABLE=1 /usr/bin/zip -qry "$ARCHIVE" "Spatial Anywhere.app" LICENSE
 )
 
 unzip -t "$ARCHIVE"

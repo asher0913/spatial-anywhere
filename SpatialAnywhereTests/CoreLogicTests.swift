@@ -1,7 +1,7 @@
 import CoreAudio
 import CoreMedia
 import XCTest
-@testable import SpatialRelay
+@testable import SpatialAnywhere
 
 final class CoreLogicTests: XCTestCase {
     func testSpotifyProcessMatcherAcceptsMainAppAndHelpers() {
@@ -197,7 +197,7 @@ final class CoreLogicTests: XCTestCase {
     }
 
     func testApplicationBundleContainsStablePrivacyIdentity() {
-        XCTAssertEqual(Bundle.main.bundleIdentifier, "com.shevlfs.SpatialRelay")
+        XCTAssertEqual(Bundle.main.bundleIdentifier, "com.asher0913.SpatialAnywhere")
         XCTAssertNotNil(Bundle.main.object(forInfoDictionaryKey: "NSAudioCaptureUsageDescription"))
         XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "CFBundlePackageType") as? String, "APPL")
         XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "CFBundleIconName") as? String, "AppIcon")

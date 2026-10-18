@@ -27,7 +27,7 @@ enum RelayError: LocalizedError {
         case .captureFailed(let detail):
             "Spotify audio capture failed (\(detail))."
         case .cleanupFailed(let detail):
-            "Spatial Relay could not fully release the audio tap (\(detail)). It attempted to restore Spotify output; quit the app before retrying."
+            "Spatial Anywhere could not fully release the audio tap (\(detail)). It attempted to restore Spotify output; quit the app before retrying."
         }
     }
 }

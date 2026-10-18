@@ -14,8 +14,8 @@ Run the test suite:
 
 ```sh
 xcodebuild \
-  -project SpatialRelay.xcodeproj \
-  -scheme SpatialRelay \
+  -project SpatialAnywhere.xcodeproj \
+  -scheme SpatialAnywhere \
   -configuration Debug \
   -destination 'platform=macOS,arch=arm64' \
   CODE_SIGNING_ALLOWED=NO \
@@ -26,8 +26,8 @@ Run static analysis:
 
 ```sh
 xcodebuild \
-  -project SpatialRelay.xcodeproj \
-  -scheme SpatialRelay \
+  -project SpatialAnywhere.xcodeproj \
+  -scheme SpatialAnywhere \
   -configuration Debug \
   -destination 'platform=macOS,arch=arm64' \
   CODE_SIGNING_ALLOWED=NO \

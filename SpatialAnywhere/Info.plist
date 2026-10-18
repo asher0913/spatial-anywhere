@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Spatial Relay</string>
+	<string>Spatial Anywhere</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,7 +25,7 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSAudioCaptureUsageDescription</key>
-	<string>Spatial Relay captures Spotify's outgoing audio only while relaying it for AirPods Spatial Audio. Audio is never saved.</string>
+	<string>Spatial Anywhere captures Spotify's outgoing audio only while relaying it for AirPods Spatial Audio. Audio is never saved.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSPrincipalClass</key>

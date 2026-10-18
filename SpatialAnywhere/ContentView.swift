@@ -43,7 +43,7 @@ struct ContentView: View {
                 )
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Spatial Relay")
+                Text("Spatial Anywhere")
                     .font(.title.bold())
                 Text("Make Spotify stereo eligible for AirPods Spatial Audio")
                     .font(.subheadline)
@@ -183,7 +183,7 @@ struct ContentView: View {
             .disabled(viewModel.isBusy || viewModel.isRelaying)
 
             Menu {
-                Button("Quit Spatial Relay", systemImage: "power") {
+                Button("Quit Spatial Anywhere", systemImage: "power") {
                     viewModel.quitApplication()
                 }
                 .keyboardShortcut("q")

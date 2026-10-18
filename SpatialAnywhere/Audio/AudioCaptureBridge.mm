@@ -13,7 +13,7 @@ namespace {
 // More than ten seconds at 48 kHz. This leaves ample headroom for an AirPods
 // spatial-mode hardware reconfiguration without dropping or compressing PCM.
 constexpr UInt32 kRingCapacityFrames = 524288;
-NSString *const kCaptureErrorDomain = @"com.shevlfs.SpatialRelay.AudioCapture";
+NSString *const kCaptureErrorDomain = @"com.asher0913.SpatialAnywhere.AudioCapture";
 
 struct CaptureStorage {
     explicit CaptureStorage(UInt32 capacity)
