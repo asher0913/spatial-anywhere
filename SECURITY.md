@@ -1,6 +1,6 @@
 # Security
 
-Security-sensitive bugs include cases where the app captures the wrong process, writes or transmits audio, fails to restore Spotify's direct output, or mishandles macOS permissions.
+Security-sensitive bugs include cases where the app captures the wrong process, writes or transmits audio, fails to restore a tapped app's direct output, or mishandles macOS permissions.
 
 Please do not publish exploit details in a public issue. Use GitHub's private vulnerability reporting for this repository when available. Otherwise, contact [@asher0913](https://github.com/asher0913) through GitHub before sharing sensitive details.
 
