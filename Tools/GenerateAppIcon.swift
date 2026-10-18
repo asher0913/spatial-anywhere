@@ -34,9 +34,9 @@ let tilePath = NSBezierPath(roundedRect: tile, xRadius: 215, yRadius: 215)
 tilePath.addClip()
 
 let background = NSGradient(colors: [
-    NSColor(calibratedRed: 0.055, green: 0.77, blue: 0.48, alpha: 1),
-    NSColor(calibratedRed: 0.035, green: 0.55, blue: 0.88, alpha: 1),
-    NSColor(calibratedRed: 0.19, green: 0.23, blue: 0.72, alpha: 1)
+    NSColor(calibratedRed: 1.0, green: 0.55, blue: 0.32, alpha: 1),
+    NSColor(calibratedRed: 0.90, green: 0.26, blue: 0.56, alpha: 1),
+    NSColor(calibratedRed: 0.40, green: 0.26, blue: 0.86, alpha: 1)
 ])!
 background.draw(in: tilePath, angle: -42)
 
@@ -62,11 +62,9 @@ func strokedArc(radius: CGFloat, start: CGFloat, end: CGFloat, alpha: CGFloat, w
     path.stroke()
 }
 
-// Offset arcs suggest a sound field without depending on an Apple-owned symbol.
-strokedArc(radius: 324, start: 37, end: 143, alpha: 0.25, width: 30)
-strokedArc(radius: 324, start: 217, end: 323, alpha: 0.25, width: 30)
-strokedArc(radius: 246, start: 42, end: 138, alpha: 0.43, width: 34)
-strokedArc(radius: 246, start: 222, end: 318, alpha: 0.43, width: 34)
+// Closed rings: sound placed all around the listener, from any app.
+strokedArc(radius: 330, start: 0, end: 360, alpha: 0.22, width: 26)
+strokedArc(radius: 250, start: 0, end: 360, alpha: 0.40, width: 30)
 
 let barHeights: [CGFloat] = [152, 248, 330, 248, 152]
 let barWidth: CGFloat = 62
@@ -81,7 +79,7 @@ for height in barHeights {
     x += barWidth + gap
 }
 
-for point in [NSPoint(x: 512, y: 834), NSPoint(x: 512, y: 186)] {
+for point in [NSPoint(x: 512, y: 840), NSPoint(x: 512, y: 180), NSPoint(x: 182, y: 510), NSPoint(x: 842, y: 510)] {
     NSColor.white.withAlphaComponent(0.92).setFill()
     NSBezierPath(ovalIn: NSRect(x: point.x - 21, y: point.y - 21, width: 42, height: 42)).fill()
 }
